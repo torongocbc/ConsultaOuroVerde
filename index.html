@@ -2,8 +2,6 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
   <title>Consulta de Prestadores - Ouro Verde</title>
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; background: #f4f4f4; }
@@ -17,82 +15,57 @@
 <body>
   <h1>Consulta de Prestadores - Ouro Verde</h1>
 
-  <label for="categoria">Selecione o tipo de profissional:</label>
+  <label for="categoria">Selecione a Categoria:</label>
   <select id="categoria" onchange="filtrarDados()">
-    <option value="">-- Carregando categorias --</option>
+    <option value="">-- Selecione --</option>
+    <option value="Jardinagem">Jardinagem</option>
+    <option value="Pedreiro">Pedreiro</option>
+    <option value="Eletricista">Eletricista</option>
+    <!-- Adicione mais categorias conforme os dados da planilha -->
   </select>
 
   <table id="tabelaResultados">
     <thead>
       <tr>
         <th>Nome</th>
-        <th>Telefone</th>
+        <th>Serviço</th>
         <th>WhatsApp</th>
       </tr>
     </thead>
     <tbody>
-      <!-- Resultados serão inseridos aqui -->
+      <!-- Resultados aparecerão aqui -->
     </tbody>
   </table>
 
   <script>
-    const SHEET_ID = '1efhoUCG9F7p71Szmq_sQ3w3KUruZornX0OZWXbgGK1s';
-    const API_KEY = 'AIzaSyBre8OK1Ga55TQn-su_YMM3D-V6QS2FjTs';
-    const ABA_DADOS = 'Dados';
+    const SHEET_ID = '1efhoUCG9F7p71Szmq_sQ3w3KUruZornX0OZWXbgGK1s'; // ID da planilha
+    const API_KEY = 'AIzaSyD2hnM-kjiN5JhmNeZ5ruso4RhM1qUA0JI'; // <-- Substitua pela sua chave API gerada
+    const SHEET_NAME = 'Consulta Ouro Verde'; // Nome da aba
+    const RANGE = 'A5:D'; // Intervalo de dados
 
-    let todosOsDados = [];
+    async function filtrarDados() {
+      const categoria = document.getElementById('categoria').value;
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(SHEET_NAME)}!${RANGE}?key=${API_KEY}`;
 
-    async function carregarCategoriasEDados() {
-      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${ABA_DADOS}!A2:C?key=${API_KEY}`;
       const res = await fetch(url);
       const data = await res.json();
-      todosOsDados = data.values || [];
+      const linhas = data.values || [];
 
-      // Extrair categorias únicas da coluna C (índice 2)
-      const categorias = [...new Set(todosOsDados.map(l => l[2]))].filter(Boolean).sort();
-
-      const select = document.getElementById('categoria');
-      select.innerHTML = '<option value="">-- Selecione --</option>';
-      categorias.forEach(cat => {
-        const opt = document.createElement('option');
-        opt.value = cat;
-        opt.textContent = cat;
-        select.appendChild(opt);
-      });
-    }
-
-    function filtrarDados() {
-      const categoria = document.getElementById('categoria').value;
-      const resultados = todosOsDados.filter(l => l[2] === categoria);
+      const resultados = linhas.filter(l => l[1] === categoria);
 
       const tbody = document.querySelector('#tabelaResultados tbody');
       tbody.innerHTML = '';
 
       resultados.forEach(l => {
-        const nome = l[0] || '';
-        let telefone = l[1] || '';
-
-        // Limpa o número, remove tudo que não for dígito
-        telefone = telefone.replace(/\D/g, '');
-
-        // Adiciona o código do país +55 e DDD 82
-        if (telefone.length === 8 || telefone.length === 9) {
-          telefone = '5582' + telefone;
-        }
-
-        const linkZap = `https://wa.me/${telefone}`;
-
         const row = document.createElement('tr');
         row.innerHTML = `
-          <td>${nome}</td>
-          <td>${l[1] || ''}</td>
-          <td><a href="${linkZap}" target="_blank">Falar no WhatsApp</a></td>
+          <td>${l[0]}</td>
+          <td>${l[1]}</td>
+          <td><a href="${l[3]}" target="_blank">WhatsApp</a></td>
         `;
         tbody.appendChild(row);
       });
     }
-
-    carregarCategoriasEDados();
   </script>
 </body>
 </html>
