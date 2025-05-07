@@ -39,7 +39,7 @@
 
   <script>
     const SHEET_ID = '1efhoUCG9F7p71Szmq_sQ3w3KUruZornX0OZWXbgGK1s'; // ID da planilha
-    const API_KEY = 'AIzaSyD2hnM-kjiN5JhmNeZ5ruso4RhM1qUA0JI'; // <-- Substitua pela sua chave API gerada
+    const API_KEY = 'SUA_NOVA_API_KEY_AQUI'; // <-- Substitua pela sua chave API gerada
     const SHEET_NAME = 'Consulta Ouro Verde'; // Nome da aba
     const RANGE = 'A5:D'; // Intervalo de dados
 
@@ -47,24 +47,42 @@
       const categoria = document.getElementById('categoria').value;
       const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(SHEET_NAME)}!${RANGE}?key=${API_KEY}`;
 
-      const res = await fetch(url);
-      const data = await res.json();
-      const linhas = data.values || [];
+      try {
+        const res = await fetch(url);
+        if (!res.ok) {
+          throw new Error(`Erro na requisição: ${res.statusText}`);
+        }
 
-      const resultados = linhas.filter(l => l[1] === categoria);
+        const data = await res.json();
+        const linhas = data.values || [];
 
-      const tbody = document.querySelector('#tabelaResultados tbody');
-      tbody.innerHTML = '';
+        const resultados = linhas.filter(l => l[1] === categoria);
 
-      resultados.forEach(l => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td>${l[0]}</td>
-          <td>${l[1]}</td>
-          <td><a href="${l[3]}" target="_blank">WhatsApp</a></td>
-        `;
-        tbody.appendChild(row);
-      });
+        const tbody = document.querySelector('#tabelaResultados tbody');
+        tbody.innerHTML = '';
+
+        if (resultados.length === 0) {
+          const row = document.createElement('tr');
+          row.innerHTML = `<td colspan="3">Nenhum prestador encontrado para a categoria "${categoria}"</td>`;
+          tbody.appendChild(row);
+        } else {
+          resultados.forEach(l => {
+            // Adicionando o código do país (+55) e o DDD (82)
+            const numeroWhatsApp = '+55' + '82' + l[3]; // Concatena o código do Brasil e DDD
+            const linkWhatsApp = `https://wa.me/${numeroWhatsApp}`;
+
+            const row = document.createElement('tr');
+            row.innerHTML = `
+              <td>${l[0]}</td>
+              <td>${l[1]}</td>
+              <td><a href="${linkWhatsApp}" target="_blank">WhatsApp</a></td>
+            `;
+            tbody.appendChild(row);
+          });
+        }
+      } catch (error) {
+        console.error('Erro ao acessar a planilha:', error);
+      }
     }
   </script>
 </body>
