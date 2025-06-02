@@ -8,9 +8,15 @@
     body { font-family: Arial, sans-serif; padding: 20px; background: #f4f4f4; }
     h1 { color: #333; }
     label, select, table { margin-top: 10px; display: block; }
-    table { border-collapse: collapse; width: 100%; margin-top: 20px; background: white; }
+    table { border-collapse: collapse; width: 100%; margin-top: 10px; background: white; }
     th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
     th { background-color: #eee; }
+    .categoria-titulo {
+      background-color: #ddd;
+      font-weight: bold;
+      padding: 10px;
+      margin-top: 30px;
+    }
   </style>
 </head>
 <body>
@@ -21,18 +27,7 @@
     <option value="">-- Carregando categorias --</option>
   </select>
 
-  <table id="tabelaResultados">
-    <thead>
-      <tr>
-        <th>Nome</th>
-        <th>Telefone</th>
-        <th>WhatsApp</th>
-      </tr>
-    </thead>
-    <tbody>
-      <!-- Resultados serão inseridos aqui -->
-    </tbody>
-  </table>
+  <div id="resultadoContainer"></div>
 
   <script>
     const API_KEY = 'AIzaSyD2hnM-kjiN5JhmNeZ5ruso4RhM1qUA0JI';
@@ -51,13 +46,22 @@
         const categorias = [...new Set(todosOsDados.map(l => l[2]))].filter(Boolean).sort();
 
         const select = document.getElementById('categoria');
-        select.innerHTML = '<option value="">-- Selecione --</option>';
+        select.innerHTML = '';
+
+        const optTodos = document.createElement('option');
+        optTodos.value = 'TODOS';
+        optTodos.textContent = 'Todos';
+        select.appendChild(optTodos);
+
         categorias.forEach(cat => {
           const opt = document.createElement('option');
           opt.value = cat;
           opt.textContent = cat;
           select.appendChild(opt);
         });
+
+        filtrarDados();
+
       } catch (error) {
         console.error('Erro ao carregar dados da planilha:', error);
         alert('Erro ao carregar dados. Verifique se a planilha está publicada e pública.');
@@ -65,36 +69,113 @@
     }
 
     function filtrarDados() {
-      const categoria = document.getElementById('categoria').value;
-      let resultados = todosOsDados.filter(l => l[2] === categoria);
+      const categoriaSelecionada = document.getElementById('categoria').value;
+      const container = document.getElementById('resultadoContainer');
+      container.innerHTML = '';
 
-      // Ordena os resultados por nome em ordem alfabética (com suporte a acentos)
-      resultados.sort((a, b) => a[0].localeCompare(b[0], 'pt-BR'));
+      if (categoriaSelecionada === 'TODOS') {
+        const agrupados = {};
 
-      const tbody = document.querySelector('#tabelaResultados tbody');
-      tbody.innerHTML = '';
+        todosOsDados.forEach(l => {
+          const cat = l[2] || 'Sem Categoria';
+          if (!agrupados[cat]) agrupados[cat] = [];
+          agrupados[cat].push(l);
+        });
 
-      resultados.forEach(l => {
-        const nome = l[0] || '';
-        let telefone = l[1] || '';
-        const telefoneNumerico = telefone.replace(/\D/g, '');
+        const categoriasOrdenadas = Object.keys(agrupados).sort();
 
-        let telefoneCompleto = telefoneNumerico;
-        if (telefoneNumerico.length === 8 || telefoneNumerico.length === 9) {
-          telefoneCompleto = '5582' + telefoneNumerico;
-        } else if (telefoneNumerico.length === 10 || telefoneNumerico.length === 11) {
-          telefoneCompleto = '55' + telefoneNumerico;
-        }
+        categoriasOrdenadas.forEach(cat => {
+          agrupados[cat].sort((a, b) => (a[0] || '').localeCompare(b[0] || '', 'pt-BR'));
 
-        const linkZap = `https://wa.me/${telefoneCompleto}`;
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td>${nome}</td>
-          <td>${telefone}</td>
-          <td><a href="${linkZap}" target="_blank">Falar no WhatsApp</a></td>
+          const titulo = document.createElement('div');
+          titulo.className = 'categoria-titulo';
+          titulo.textContent = `Categoria: ${cat}`;
+          container.appendChild(titulo);
+
+          const tabela = document.createElement('table');
+          tabela.innerHTML = `
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>Telefone</th>
+                <th>WhatsApp</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          `;
+
+          const tbody = tabela.querySelector('tbody');
+
+          agrupados[cat].forEach(l => {
+            const nome = l[0] || '';
+            let telefone = l[1] || '';
+            const telefoneNumerico = telefone.replace(/\D/g, '');
+
+            let telefoneCompleto = telefoneNumerico;
+            if (telefoneNumerico.length === 8 || telefoneNumerico.length === 9) {
+              telefoneCompleto = '5582' + telefoneNumerico;
+            } else if (telefoneNumerico.length === 10 || telefoneNumerico.length === 11) {
+              telefoneCompleto = '55' + telefoneNumerico;
+            }
+
+            const linkZap = `https://wa.me/${telefoneCompleto}`;
+
+            const row = document.createElement('tr');
+            row.innerHTML = `
+              <td>${nome}</td>
+              <td>${telefone}</td>
+              <td><a href="${linkZap}" target="_blank">Falar no WhatsApp</a></td>
+            `;
+            tbody.appendChild(row);
+          });
+
+          container.appendChild(tabela);
+        });
+
+      } else {
+        const resultados = todosOsDados
+          .filter(l => l[2] === categoriaSelecionada)
+          .sort((a, b) => (a[0] || '').localeCompare(b[0] || '', 'pt-BR'));
+
+        const tabela = document.createElement('table');
+        tabela.innerHTML = `
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th>Telefone</th>
+              <th>WhatsApp</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
         `;
-        tbody.appendChild(row);
-      });
+
+        const tbody = tabela.querySelector('tbody');
+
+        resultados.forEach(l => {
+          const nome = l[0] || '';
+          let telefone = l[1] || '';
+          const telefoneNumerico = telefone.replace(/\D/g, '');
+
+          let telefoneCompleto = telefoneNumerico;
+          if (telefoneNumerico.length === 8 || telefoneNumerico.length === 9) {
+            telefoneCompleto = '5582' + telefoneNumerico;
+          } else if (telefoneNumerico.length === 10 || telefoneNumerico.length === 11) {
+            telefoneCompleto = '55' + telefoneNumerico;
+          }
+
+          const linkZap = `https://wa.me/${telefoneCompleto}`;
+
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${nome}</td>
+            <td>${telefone}</td>
+            <td><a href="${linkZap}" target="_blank">Falar no WhatsApp</a></td>
+          `;
+          tbody.appendChild(row);
+        });
+
+        container.appendChild(tabela);
+      }
     }
 
     window.onload = carregarDados;
