@@ -11,11 +11,17 @@
     table { border-collapse: collapse; width: 100%; margin-top: 10px; background: white; }
     th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
     th { background-color: #eee; }
+
     .categoria-titulo {
-      background-color: #ddd;
-      font-weight: bold;
       padding: 10px;
+      font-weight: bold;
+      font-size: 17px;
+      color: #2c3e50;
       margin-top: 30px;
+    }
+
+    .categoria-titulo::before {
+      content: "📁 ";
     }
   </style>
 </head>
@@ -24,10 +30,10 @@
 
   <label for="categoria">Selecione o tipo de profissional:</label>
   <select id="categoria" onchange="filtrarDados()">
-    <option value="">-- Carregando categorias --</option>
+    <option value="todos" selected>Todos</option>
   </select>
 
-  <div id="resultadoContainer"></div>
+  <div id="resultados"></div>
 
   <script>
     const API_KEY = 'AIzaSyD2hnM-kjiN5JhmNeZ5ruso4RhM1qUA0JI';
@@ -39,146 +45,4 @@
       try {
         const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${ABA_DADOS}!A2:C?key=${API_KEY}`;
         const response = await fetch(url);
-        const json = await response.json();
-
-        todosOsDados = json.values || [];
-
-        const categorias = [...new Set(todosOsDados.map(l => l[2]))].filter(Boolean).sort();
-
-        const select = document.getElementById('categoria');
-        select.innerHTML = '';
-
-        const optTodos = document.createElement('option');
-        optTodos.value = 'TODOS';
-        optTodos.textContent = 'Todos';
-        select.appendChild(optTodos);
-
-        categorias.forEach(cat => {
-          const opt = document.createElement('option');
-          opt.value = cat;
-          opt.textContent = cat;
-          select.appendChild(opt);
-        });
-
-        filtrarDados();
-
-      } catch (error) {
-        console.error('Erro ao carregar dados da planilha:', error);
-        alert('Erro ao carregar dados. Verifique se a planilha está publicada e pública.');
-      }
-    }
-
-    function filtrarDados() {
-      const categoriaSelecionada = document.getElementById('categoria').value;
-      const container = document.getElementById('resultadoContainer');
-      container.innerHTML = '';
-
-      if (categoriaSelecionada === 'TODOS') {
-        const agrupados = {};
-
-        todosOsDados.forEach(l => {
-          const cat = l[2] || 'Sem Categoria';
-          if (!agrupados[cat]) agrupados[cat] = [];
-          agrupados[cat].push(l);
-        });
-
-        const categoriasOrdenadas = Object.keys(agrupados).sort();
-
-        categoriasOrdenadas.forEach(cat => {
-          agrupados[cat].sort((a, b) => (a[0] || '').localeCompare(b[0] || '', 'pt-BR'));
-
-          const titulo = document.createElement('div');
-          titulo.className = 'categoria-titulo';
-          titulo.textContent = `Categoria: ${cat}`;
-          container.appendChild(titulo);
-
-          const tabela = document.createElement('table');
-          tabela.innerHTML = `
-            <thead>
-              <tr>
-                <th>Nome</th>
-                <th>Telefone</th>
-                <th>WhatsApp</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          `;
-
-          const tbody = tabela.querySelector('tbody');
-
-          agrupados[cat].forEach(l => {
-            const nome = l[0] || '';
-            let telefone = l[1] || '';
-            const telefoneNumerico = telefone.replace(/\D/g, '');
-
-            let telefoneCompleto = telefoneNumerico;
-            if (telefoneNumerico.length === 8 || telefoneNumerico.length === 9) {
-              telefoneCompleto = '5582' + telefoneNumerico;
-            } else if (telefoneNumerico.length === 10 || telefoneNumerico.length === 11) {
-              telefoneCompleto = '55' + telefoneNumerico;
-            }
-
-            const linkZap = `https://wa.me/${telefoneCompleto}`;
-
-            const row = document.createElement('tr');
-            row.innerHTML = `
-              <td>${nome}</td>
-              <td>${telefone}</td>
-              <td><a href="${linkZap}" target="_blank">Falar no WhatsApp</a></td>
-            `;
-            tbody.appendChild(row);
-          });
-
-          container.appendChild(tabela);
-        });
-
-      } else {
-        const resultados = todosOsDados
-          .filter(l => l[2] === categoriaSelecionada)
-          .sort((a, b) => (a[0] || '').localeCompare(b[0] || '', 'pt-BR'));
-
-        const tabela = document.createElement('table');
-        tabela.innerHTML = `
-          <thead>
-            <tr>
-              <th>Nome</th>
-              <th>Telefone</th>
-              <th>WhatsApp</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        `;
-
-        const tbody = tabela.querySelector('tbody');
-
-        resultados.forEach(l => {
-          const nome = l[0] || '';
-          let telefone = l[1] || '';
-          const telefoneNumerico = telefone.replace(/\D/g, '');
-
-          let telefoneCompleto = telefoneNumerico;
-          if (telefoneNumerico.length === 8 || telefoneNumerico.length === 9) {
-            telefoneCompleto = '5582' + telefoneNumerico;
-          } else if (telefoneNumerico.length === 10 || telefoneNumerico.length === 11) {
-            telefoneCompleto = '55' + telefoneNumerico;
-          }
-
-          const linkZap = `https://wa.me/${telefoneCompleto}`;
-
-          const row = document.createElement('tr');
-          row.innerHTML = `
-            <td>${nome}</td>
-            <td>${telefone}</td>
-            <td><a href="${linkZap}" target="_blank">Falar no WhatsApp</a></td>
-          `;
-          tbody.appendChild(row);
-        });
-
-        container.appendChild(tabela);
-      }
-    }
-
-    window.onload = carregarDados;
-  </script>
-</body>
-</html>
+        const
