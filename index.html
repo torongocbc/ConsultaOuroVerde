@@ -1,184 +1,444 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Consulta de Prestadores - Ouro Verde</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#174d3a">
+  <meta name="description" content="Consulte prestadores de serviços do Condomínio Ouro Verde e entre em contato pelo WhatsApp.">
+  <title>Prestadores Ouro Verde</title>
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; background: #f4f4f4; }
-    h1 { color: #333; }
-    label, select, table { margin-top: 10px; display: block; }
-    table { border-collapse: collapse; width: 100%; margin-top: 10px; background: white; }
-    th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
-    th { background-color: #eee; }
-    .categoria-titulo {
-      background-color: #ddd;
-      font-weight: bold;
-      padding: 10px;
-      margin-top: 30px;
+    :root {
+      color-scheme: light;
+      --green-950: #103728;
+      --green-900: #174d3a;
+      --green-800: #206346;
+      --green-700: #23764f;
+      --green-100: #e7f3eb;
+      --green-50: #f3f8f4;
+      --ink: #1e2b24;
+      --muted: #64736a;
+      --line: #e0e8e2;
+      --surface: #ffffff;
+      --page: #f4f7f5;
+      --shadow: 0 8px 24px rgba(24, 58, 40, .07);
+      --radius: 18px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      color: var(--ink);
+      background: var(--page);
+      line-height: 1.5;
+    }
+    button, input, select { font: inherit; }
+    .hero {
+      color: #fff;
+      background: linear-gradient(135deg, var(--green-950), var(--green-800));
+      padding: 30px 20px 76px;
+    }
+    .hero-inner, main, footer { width: min(1080px, 100% - 32px); margin-inline: auto; }
+    .brand { display: flex; align-items: center; gap: 13px; }
+    .brand-mark {
+      display: grid; place-items: center; flex: 0 0 48px; height: 48px;
+      border: 1px solid rgba(255,255,255,.25); border-radius: 15px;
+      background: rgba(255,255,255,.12); font-size: 25px;
+    }
+    .brand h1 { margin: 0; font-size: clamp(1.25rem, 3vw, 1.7rem); letter-spacing: -.03em; }
+    .brand p { margin: 3px 0 0; color: #d8e9de; font-size: .94rem; }
+    .hero-copy { margin: 27px 0 0; max-width: 620px; }
+    .hero-copy h2 { margin: 0 0 7px; font-size: clamp(1.5rem, 4vw, 2.15rem); letter-spacing: -.035em; }
+    .hero-copy p { margin: 0; color: #d8e9de; }
+    main { margin-top: -45px; }
+    .search-panel {
+      background: var(--surface); border: 1px solid var(--line); border-radius: 22px;
+      padding: clamp(18px, 3vw, 27px); box-shadow: var(--shadow);
+    }
+    .panel-heading { margin: 0 0 17px; font-size: 1.05rem; }
+    .filters { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(220px, 1fr); gap: 14px; }
+    .field label { display: block; margin-bottom: 7px; font-size: .88rem; font-weight: 700; }
+    .input-wrap { position: relative; }
+    .input-wrap .search-icon {
+      position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+      color: var(--muted); pointer-events: none; font-size: 1.1rem;
+    }
+    input, select {
+      width: 100%; min-height: 48px; border: 1px solid #d4dfd7; border-radius: 12px;
+      background: #fff; color: var(--ink); padding: 11px 13px; outline: none;
+    }
+    input { padding-left: 42px; }
+    input:focus, select:focus, button:focus-visible, a:focus-visible {
+      outline: 3px solid #80c99d; outline-offset: 2px; border-color: var(--green-700);
+    }
+    .filter-bottom { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 15px; }
+    .hint { margin: 0; color: var(--muted); font-size: .85rem; }
+    .clear-btn {
+      border: 0; background: transparent; color: var(--green-800); font-weight: 700;
+      padding: 8px 2px; cursor: pointer; white-space: nowrap;
+    }
+    .results-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 28px 2px 15px; }
+    .results-head h2 { font-size: 1.2rem; margin: 0; }
+    .count { color: var(--muted); font-size: .9rem; }
+    .category-section { margin: 0 0 28px; }
+    .category-title {
+      display: flex; align-items: center; gap: 10px; margin: 0 0 13px;
+      font-size: 1.05rem; font-weight: 800; color: var(--green-950);
+    }
+    .category-title::before { content: ""; width: 5px; height: 23px; border-radius: 5px; background: #4d9b6a; }
+    .category-title .category-count {
+      color: var(--muted); font-size: .8rem; font-weight: 600;
+      background: #e9efeb; border-radius: 999px; padding: 3px 8px;
+    }
+    .cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+    .provider-card {
+      display: flex; flex-direction: column; gap: 16px; min-width: 0;
+      padding: 19px; border: 1px solid var(--line); border-radius: var(--radius);
+      background: var(--surface); box-shadow: 0 3px 12px rgba(24, 58, 40, .035);
+      transition: box-shadow .18s ease, transform .18s ease;
+    }
+    .provider-card:hover { box-shadow: var(--shadow); transform: translateY(-2px); }
+    .provider-info { min-width: 0; }
+    .provider-name { margin: 0; overflow-wrap: anywhere; font-size: 1.02rem; font-weight: 750; }
+    .provider-category { margin: 5px 0 0; color: var(--muted); font-size: .9rem; }
+    .phone { display: flex; align-items: center; gap: 8px; margin-top: 12px; color: #405148; font-size: .92rem; overflow-wrap: anywhere; }
+    .phone-icon { color: var(--green-700); }
+    .whatsapp {
+      display: inline-flex; justify-content: center; align-items: center; gap: 9px;
+      width: 100%; min-height: 46px; margin-top: auto; padding: 11px 14px;
+      border-radius: 12px; background: #16834a; color: #fff; text-decoration: none;
+      font-weight: 750; text-align: center; transition: background .15s ease;
+    }
+    .whatsapp:hover { background: #116b3b; }
+    .whatsapp[aria-disabled="true"] { background: #e8ece9; color: #69756d; pointer-events: none; }
+    .status {
+      padding: 28px 18px; text-align: center; border: 1px dashed #cbd9ce;
+      border-radius: var(--radius); background: rgba(255,255,255,.72); color: var(--muted);
+    }
+    .status strong { display: block; color: var(--ink); font-size: 1.02rem; margin-bottom: 5px; }
+    .status button {
+      margin-top: 14px; padding: 10px 16px; border: 0; border-radius: 10px;
+      background: var(--green-800); color: white; font-weight: 700; cursor: pointer;
+    }
+    footer { padding: 30px 0 24px; color: var(--muted); text-align: center; font-size: .82rem; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+    @media (max-width: 850px) {
+      .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 620px) {
+      .hero { padding: 23px 0 69px; }
+      .hero-inner, main, footer { width: min(100% - 24px, 1080px); }
+      .brand-mark { flex-basis: 43px; height: 43px; border-radius: 13px; }
+      .hero-copy { margin-top: 23px; }
+      .filters { grid-template-columns: 1fr; gap: 13px; }
+      .search-panel { border-radius: 18px; }
+      .cards { grid-template-columns: 1fr; gap: 11px; }
+      .provider-card { padding: 17px; }
+      .results-head { margin-top: 24px; align-items: flex-start; flex-direction: column; gap: 3px; }
+      .filter-bottom { align-items: flex-start; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }
     }
   </style>
 </head>
 <body>
-  <h1>Consulta de Prestadores - Ouro Verde</h1>
+  <header class="hero">
+    <div class="hero-inner">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">⌂</div>
+        <div>
+          <h1>Prestadores Ouro Verde</h1>
+          <p>Guia de serviços do condomínio</p>
+        </div>
+      </div>
+      <div class="hero-copy">
+        <h2>Encontre o profissional que você precisa.</h2>
+        <p>Pesquise por nome ou serviço e entre em contato diretamente pelo WhatsApp.</p>
+      </div>
+    </div>
+  </header>
 
-  <label for="categoria">Selecione o tipo de profissional:</label>
-  <select id="categoria" onchange="filtrarDados()">
-    <option value="">-- Carregando categorias --</option>
-  </select>
+  <main>
+    <section class="search-panel" aria-labelledby="searchTitle">
+      <h2 class="panel-heading" id="searchTitle">Quem você está procurando?</h2>
+      <div class="filters">
+        <div class="field">
+          <label for="busca">Nome ou tipo de serviço</label>
+          <div class="input-wrap">
+            <span class="search-icon" aria-hidden="true">⌕</span>
+            <input id="busca" type="search" placeholder="Ex.: eletricista, Maria..." autocomplete="off">
+          </div>
+        </div>
+        <div class="field">
+          <label for="categoria">Tipo de profissional</label>
+          <select id="categoria" disabled>
+            <option value="">Carregando categorias...</option>
+          </select>
+        </div>
+      </div>
+      <div class="filter-bottom">
+        <p class="hint" id="filterHint">Carregando a lista de prestadores...</p>
+        <button class="clear-btn" id="limpar" type="button">Limpar filtros</button>
+      </div>
+    </section>
 
-  <div id="resultadoContainer"></div>
+    <section aria-labelledby="resultsTitle">
+      <div class="results-head">
+        <h2 id="resultsTitle">Prestadores disponíveis</h2>
+        <span class="count" id="contador" aria-live="polite"></span>
+      </div>
+      <div id="resultadoContainer" aria-live="polite">
+        <div class="status"><strong>Carregando prestadores...</strong>Isso pode levar alguns segundos.</div>
+      </div>
+    </section>
+  </main>
+
+  <footer>Consulta de prestadores • Condomínio Ouro Verde</footer>
 
   <script>
+    // A planilha continua sendo a fonte de dados. Não coloque informações privadas nela.
     const API_KEY = 'AIzaSyD2hnM-kjiN5JhmNeZ5ruso4RhM1qUA0JI';
     const SHEET_ID = '1efhoUCG9F7p71Szmq_sQ3w3KUruZornX0OZWXbgGK1s';
     const ABA_DADOS = 'Dados';
+    const DDD_PADRAO = '82';
+
     let todosOsDados = [];
 
-    async function carregarDados() {
-      try {
-        const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${ABA_DADOS}!A2:C?key=${API_KEY}`;
-        const response = await fetch(url);
-        const json = await response.json();
+    const categoriaSelect = document.getElementById('categoria');
+    const buscaInput = document.getElementById('busca');
+    const resultadoContainer = document.getElementById('resultadoContainer');
+    const contador = document.getElementById('contador');
+    const filterHint = document.getElementById('filterHint');
 
-        todosOsDados = json.values || [];
+    function textoSeguro(valor) {
+      return String(valor ?? '').trim();
+    }
 
-        const categorias = [...new Set(todosOsDados.map(l => l[2]))].filter(Boolean).sort();
-
-        const select = document.getElementById('categoria');
-        select.innerHTML = '';
-
-        const optTodos = document.createElement('option');
-        optTodos.value = 'TODOS';
-        optTodos.textContent = 'Todos';
-        select.appendChild(optTodos);
-
-        categorias.forEach(cat => {
-          const opt = document.createElement('option');
-          opt.value = cat;
-          opt.textContent = cat;
-          select.appendChild(opt);
-        });
-
-        filtrarDados();
-
-      } catch (error) {
-        console.error('Erro ao carregar dados da planilha:', error);
-        alert('Erro ao carregar dados. Verifique se a planilha está publicada e pública.');
+    function mostrarEstado(titulo, mensagem, permitirTentarNovamente = false) {
+      resultadoContainer.replaceChildren();
+      const box = document.createElement('div');
+      box.className = 'status';
+      const strong = document.createElement('strong');
+      strong.textContent = titulo;
+      const p = document.createElement('p');
+      p.textContent = mensagem;
+      p.style.margin = '0';
+      box.append(strong, p);
+      if (permitirTentarNovamente) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.textContent = 'Tentar novamente';
+        button.addEventListener('click', carregarDados);
+        box.appendChild(button);
       }
+      resultadoContainer.appendChild(box);
+      contador.textContent = '';
+    }
+
+    function prepararTelefone(telefone) {
+      let numeros = textoSeguro(telefone).replace(/\D/g, '');
+      if (!numeros) return '';
+      // Se a planilha já contiver código do Brasil, não o acrescente novamente.
+      if (numeros.startsWith('55') && (numeros.length === 12 || numeros.length === 13)) {
+        return numeros;
+      }
+      if (numeros.length === 8 || numeros.length === 9) {
+        numeros = '55' + DDD_PADRAO + numeros;
+      } else if (numeros.length === 10 || numeros.length === 11) {
+        numeros = '55' + numeros;
+      } else {
+        return '';
+      }
+      return numeros;
+    }
+
+    function criarCartao(registro, categoriaSelecionada) {
+      const nome = textoSeguro(registro[0]) || 'Nome não informado';
+      const telefone = textoSeguro(registro[1]);
+      const categoria = textoSeguro(registro[2]) || 'Sem categoria';
+      const telefoneCompleto = prepararTelefone(telefone);
+
+      const card = document.createElement('article');
+      card.className = 'provider-card';
+
+      const info = document.createElement('div');
+      info.className = 'provider-info';
+
+      const nomeEl = document.createElement('h3');
+      nomeEl.className = 'provider-name';
+      nomeEl.textContent = nome;
+      info.appendChild(nomeEl);
+
+      // Mostra a categoria no cartão quando "Todos" está selecionado.
+      if (categoriaSelecionada === 'TODOS') {
+        const categoriaEl = document.createElement('p');
+        categoriaEl.className = 'provider-category';
+        categoriaEl.textContent = categoria;
+        info.appendChild(categoriaEl);
+      }
+
+      const telefoneEl = document.createElement('p');
+      telefoneEl.className = 'phone';
+      const telefoneIcone = document.createElement('span');
+      telefoneIcone.className = 'phone-icon';
+      telefoneIcone.setAttribute('aria-hidden', 'true');
+      telefoneIcone.textContent = '☎';
+      const telefoneTexto = document.createElement('span');
+      telefoneTexto.textContent = telefone || 'Telefone não informado';
+      telefoneEl.append(telefoneIcone, telefoneTexto);
+      info.appendChild(telefoneEl);
+
+      const link = document.createElement('a');
+      link.className = 'whatsapp';
+      link.textContent = '◉  Conversar pelo WhatsApp';
+      if (telefoneCompleto) {
+        link.href = 'https://wa.me/' + telefoneCompleto;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.setAttribute('aria-label', 'Conversar com ' + nome + ' pelo WhatsApp');
+      } else {
+        link.href = '#';
+        link.setAttribute('aria-disabled', 'true');
+        link.setAttribute('aria-label', 'WhatsApp indisponível: telefone inválido ou não informado');
+        link.addEventListener('click', event => event.preventDefault());
+      }
+
+      card.append(info, link);
+      return card;
+    }
+
+    function renderizarGrupo(categoria, registros, categoriaSelecionada) {
+      const section = document.createElement('section');
+      section.className = 'category-section';
+
+      if (categoriaSelecionada === 'TODOS') {
+        const heading = document.createElement('h3');
+        heading.className = 'category-title';
+        heading.appendChild(document.createTextNode(categoria));
+        const count = document.createElement('span');
+        count.className = 'category-count';
+        count.textContent = registros.length;
+        heading.appendChild(count);
+        section.appendChild(heading);
+      }
+
+      const cards = document.createElement('div');
+      cards.className = 'cards';
+      registros.forEach(registro => cards.appendChild(criarCartao(registro, categoriaSelecionada)));
+      section.appendChild(cards);
+      resultadoContainer.appendChild(section);
     }
 
     function filtrarDados() {
-      const categoriaSelecionada = document.getElementById('categoria').value;
-      const container = document.getElementById('resultadoContainer');
-      container.innerHTML = '';
+      const categoriaSelecionada = categoriaSelect.value;
+      const termo = textoSeguro(buscaInput.value).toLocaleLowerCase('pt-BR');
+      resultadoContainer.replaceChildren();
+
+      let resultados = todosOsDados.filter(registro => {
+        const categoria = textoSeguro(registro[2]) || 'Sem categoria';
+        const correspondeCategoria = categoriaSelecionada === 'TODOS' || categoria === categoriaSelecionada;
+        const textoBusca = [registro[0], registro[1], registro[2]]
+          .map(textoSeguro).join(' ').toLocaleLowerCase('pt-BR');
+        return correspondeCategoria && textoBusca.includes(termo);
+      });
+
+      resultados.sort((a, b) => textoSeguro(a[0]).localeCompare(textoSeguro(b[0]), 'pt-BR', { sensitivity: 'base' }));
+
+      contador.textContent = resultados.length + (resultados.length === 1 ? ' prestador encontrado' : ' prestadores encontrados');
+      filterHint.textContent = termo || (categoriaSelecionada !== 'TODOS' ? 'Categoria selecionada: ' + categoriaSelecionada : 'Lista completa organizada por categoria.');
+
+      if (!resultados.length) {
+        const temFiltro = termo || (categoriaSelecionada && categoriaSelecionada !== 'TODOS');
+        mostrarEstado(
+          temFiltro ? 'Nenhum prestador encontrado' : 'Nenhum prestador cadastrado',
+          temFiltro ? 'Tente outro nome ou serviço, ou limpe os filtros para ver todos os resultados.' : 'Ainda não há prestadores para exibir.'
+        );
+        contador.textContent = '0 prestadores encontrados';
+        return;
+      }
 
       if (categoriaSelecionada === 'TODOS') {
-        const agrupados = {};
-
-        todosOsDados.forEach(l => {
-          const cat = l[2] || 'Sem Categoria';
-          if (!agrupados[cat]) agrupados[cat] = [];
-          agrupados[cat].push(l);
+        const agrupados = new Map();
+        resultados.forEach(registro => {
+          const cat = textoSeguro(registro[2]) || 'Sem categoria';
+          if (!agrupados.has(cat)) agrupados.set(cat, []);
+          agrupados.get(cat).push(registro);
         });
-
-        const categoriasOrdenadas = Object.keys(agrupados).sort();
-
-        categoriasOrdenadas.forEach(cat => {
-          agrupados[cat].sort((a, b) => (a[0] || '').localeCompare(b[0] || '', 'pt-BR'));
-
-          const titulo = document.createElement('div');
-          titulo.className = 'categoria-titulo';
-          titulo.textContent = `Categoria: ${cat}`;
-          container.appendChild(titulo);
-
-          const tabela = document.createElement('table');
-          tabela.innerHTML = `
-            <thead>
-              <tr>
-                <th>Nome</th>
-                <th>Telefone</th>
-                <th>WhatsApp</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          `;
-
-          const tbody = tabela.querySelector('tbody');
-
-          agrupados[cat].forEach(l => {
-            const nome = l[0] || '';
-            let telefone = l[1] || '';
-            const telefoneNumerico = telefone.replace(/\D/g, '');
-
-            let telefoneCompleto = telefoneNumerico;
-            if (telefoneNumerico.length === 8 || telefoneNumerico.length === 9) {
-              telefoneCompleto = '5582' + telefoneNumerico;
-            } else if (telefoneNumerico.length === 10 || telefoneNumerico.length === 11) {
-              telefoneCompleto = '55' + telefoneNumerico;
-            }
-
-            const linkZap = `https://wa.me/${telefoneCompleto}`;
-
-            const row = document.createElement('tr');
-            row.innerHTML = `
-              <td>${nome}</td>
-              <td>${telefone}</td>
-              <td><a href="${linkZap}" target="_blank">Falar no WhatsApp</a></td>
-            `;
-            tbody.appendChild(row);
-          });
-
-          container.appendChild(tabela);
-        });
-
+        [...agrupados.keys()]
+          .sort((a, b) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' }))
+          .forEach(cat => renderizarGrupo(cat, agrupados.get(cat), categoriaSelecionada));
       } else {
-        const resultados = todosOsDados
-          .filter(l => l[2] === categoriaSelecionada)
-          .sort((a, b) => (a[0] || '').localeCompare(b[0] || '', 'pt-BR'));
-
-        const tabela = document.createElement('table');
-        tabela.innerHTML = `
-          <thead>
-            <tr>
-              <th>Nome</th>
-              <th>Telefone</th>
-              <th>WhatsApp</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        `;
-
-        const tbody = tabela.querySelector('tbody');
-
-        resultados.forEach(l => {
-          const nome = l[0] || '';
-          let telefone = l[1] || '';
-          const telefoneNumerico = telefone.replace(/\D/g, '');
-
-          let telefoneCompleto = telefoneNumerico;
-          if (telefoneNumerico.length === 8 || telefoneNumerico.length === 9) {
-            telefoneCompleto = '5582' + telefoneNumerico;
-          } else if (telefoneNumerico.length === 10 || telefoneNumerico.length === 11) {
-            telefoneCompleto = '55' + telefoneNumerico;
-          }
-
-          const linkZap = `https://wa.me/${telefoneCompleto}`;
-
-          const row = document.createElement('tr');
-          row.innerHTML = `
-            <td>${nome}</td>
-            <td>${telefone}</td>
-            <td><a href="${linkZap}" target="_blank">Falar no WhatsApp</a></td>
-          `;
-          tbody.appendChild(row);
-        });
-
-        container.appendChild(tabela);
+        renderizarGrupo(categoriaSelecionada, resultados, categoriaSelecionada);
       }
     }
 
-    window.onload = carregarDados;
+    async function carregarDados() {
+      categoriaSelect.disabled = true;
+      mostrarEstado('Carregando prestadores...', 'Estamos buscando os dados da planilha.');
+      filterHint.textContent = 'Carregando a lista de prestadores...';
+
+      try {
+        const range = encodeURIComponent(ABA_DADOS + '!A2:C');
+        const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${range}?key=${API_KEY}`;
+        const response = await fetch(url);
+
+        if (!response.ok) {
+          throw new Error('A API do Google Sheets respondeu com HTTP ' + response.status);
+        }
+        const json = await response.json();
+        if (json.error) throw new Error(json.error.message || 'Erro retornado pelo Google Sheets.');
+
+        todosOsDados = (json.values || [])
+          .filter(row => row.some(value => textoSeguro(value)))
+          .map(row => [textoSeguro(row[0]), textoSeguro(row[1]), textoSeguro(row[2])]);
+
+        const categorias = [...new Set(todosOsDados.map(row => textoSeguro(row[2])).filter(Boolean))]
+          .sort((a, b) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' }));
+
+        categoriaSelect.replaceChildren();
+        const optTodos = document.createElement('option');
+        optTodos.value = 'TODOS';
+        optTodos.textContent = 'Todos os profissionais';
+        categoriaSelect.appendChild(optTodos);
+
+        categorias.forEach(categoria => {
+          const option = document.createElement('option');
+          option.value = categoria;
+          option.textContent = categoria;
+          categoriaSelect.appendChild(option);
+        });
+
+        categoriaSelect.value = 'TODOS';
+        categoriaSelect.disabled = false;
+
+        if (!todosOsDados.length) {
+          mostrarEstado('Nenhum prestador cadastrado', 'A planilha foi acessada, mas não há registros preenchidos nas colunas A a C da aba Dados.');
+          filterHint.textContent = 'Planilha carregada sem registros.';
+          return;
+        }
+
+        filtrarDados();
+      } catch (error) {
+        console.error('Erro ao carregar dados da planilha:', error);
+        mostrarEstado(
+          'Não foi possível carregar os prestadores',
+          'Verifique sua conexão e se a chave da API e as permissões da planilha estão corretas.',
+          true
+        );
+        filterHint.textContent = 'Falha ao carregar os dados.';
+      }
+    }
+
+    categoriaSelect.addEventListener('change', filtrarDados);
+    buscaInput.addEventListener('input', filtrarDados);
+    document.getElementById('limpar').addEventListener('click', () => {
+      buscaInput.value = '';
+      categoriaSelect.value = 'TODOS';
+      filtrarDados();
+      buscaInput.focus();
+    });
+
+    carregarDados();
   </script>
 </body>
 </html>
