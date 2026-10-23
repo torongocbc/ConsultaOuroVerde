@@ -276,33 +276,46 @@
     const ABA_DADOS = 'Dados';
     const DDD_PADRAO = '82';
 
-    // Formulário de sugestões: encaminha por serviço externo de e-mail; não altera a planilha.
+    // Formulário de sugestões: envia os dados à planilha separada via Google Apps Script.
+    const SUGESTOES_URL = 'https://script.google.com/macros/s/AKfycbzjKfgllklymIgkO1IgDEHxrSe9NuA69E1xCsgRtmFg9AD22gT2kFBOPb6ZoWyhPxk/exec';
     const suggestForm = document.getElementById('suggestForm');
     const suggestSubmit = document.getElementById('suggestSubmit');
     const suggestMessage = document.getElementById('suggestMessage');
+
     suggestForm.addEventListener('submit', async (event) => {
       event.preventDefault();
       if (document.getElementById('sugWebsite').value) return;
+
       suggestMessage.className = 'suggest-message';
       suggestMessage.textContent = '';
       suggestSubmit.disabled = true;
       suggestSubmit.textContent = 'Enviando...';
-      const payload = Object.fromEntries(new FormData(suggestForm).entries());
-      payload._subject = 'Nova sugestão de profissional — Consulta Ouro Verde';
-      payload._template = 'table';
+
+      // Os nomes abaixo correspondem aos parâmetros lidos pelo doPost(e) do Apps Script.
+      const payload = new URLSearchParams({
+        nomeProfissional: document.getElementById('sugNome').value.trim(),
+        telefone: document.getElementById('sugTelefone').value.trim(),
+        categoria: document.getElementById('sugCategoria').value.trim(),
+        nomeIndicador: document.getElementById('sugIndicador').value.trim(),
+        quadra: document.getElementById('sugQuadra').value.trim(),
+        lote: document.getElementById('sugLote').value.trim(),
+        website: document.getElementById('sugWebsite').value
+      });
+
       try {
-        const response = await fetch('https://formsubmit.co/ajax/torongo@gmail.com', {
+        // no-cors evita o bloqueio de leitura CORS da resposta do Apps Script.
+        // Por isso, a página não consegue confirmar a gravação de forma conclusiva.
+        await fetch(SUGESTOES_URL, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-          body: JSON.stringify(payload)
+          mode: 'no-cors',
+          body: payload
         });
-        const result = await response.json();
-        if (!response.ok || result.success === false) throw new Error('Envio não confirmado');
+
         suggestMessage.textContent = 'Sugestão enviada! Obrigado por contribuir. O administrador avaliará as informações antes de incluir o profissional na lista.';
         suggestMessage.className = 'suggest-message success show';
-        suggestForm.reset();
       } catch (error) {
-        suggestMessage.textContent = 'Não foi possível confirmar o envio. Tente novamente em instantes. Se o serviço ainda não estiver ativado, o administrador precisará confirmar a ativação enviada por e-mail pelo FormSubmit.';
+        console.error('Falha ao encaminhar sugestão:', error);
+        suggestMessage.textContent = 'Não foi possível encaminhar a solicitação. Confira sua conexão e tente novamente.';
         suggestMessage.className = 'suggest-message error show';
       } finally {
         suggestSubmit.disabled = false;
