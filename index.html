@@ -121,6 +121,25 @@
       margin-top: 14px; padding: 10px 16px; border: 0; border-radius: 10px;
       background: var(--green-800); color: white; font-weight: 700; cursor: pointer;
     }
+
+    .suggest-panel { margin-top: 24px; background: var(--surface); border: 1px solid var(--line); border-radius: 22px; padding: clamp(18px, 3vw, 27px); box-shadow: 0 3px 12px rgba(24,58,40,.035); }
+    .suggest-intro { margin: -7px 0 18px; color: var(--muted); font-size: .92rem; }
+    .suggest-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 14px; }
+    .suggest-field label { display:block; margin-bottom:7px; font-size:.88rem; font-weight:700; }
+    .suggest-field input, .suggest-field select, .suggest-field textarea { width:100%; min-height:46px; border:1px solid #d4dfd7; border-radius:12px; background:#fff; color:var(--ink); padding:11px 13px; font:inherit; }
+    .suggest-field textarea { min-height:90px; resize:vertical; }
+    .suggest-field input:focus, .suggest-field select:focus, .suggest-field textarea:focus { outline:3px solid #80c99d; outline-offset:2px; border-color:var(--green-700); }
+    .suggest-wide { grid-column:1 / -1; }
+    .suggest-submit { margin-top:15px; border:0; border-radius:12px; min-height:47px; padding:12px 18px; background:var(--green-800); color:#fff; font:inherit; font-weight:750; cursor:pointer; }
+    .suggest-submit:hover { background:#116b3b; }
+    .suggest-submit:disabled { opacity:.65; cursor:wait; }
+    .suggest-message { display:none; margin-top:14px; padding:12px 14px; border-radius:12px; font-size:.92rem; }
+    .suggest-message.show { display:block; }
+    .suggest-message.success { background:#e9f6ed; color:#175c32; }
+    .suggest-message.error { background:#fff0ed; color:#8a2618; }
+    .suggest-note { margin:12px 0 0; color:var(--muted); font-size:.82rem; }
+    .honeypot { position:absolute !important; left:-5000px !important; width:1px !important; height:1px !important; overflow:hidden !important; }
+
     footer { padding: 30px 0 24px; color: var(--muted); text-align: center; font-size: .82rem; }
     .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
     @media (max-width: 850px) {
@@ -132,6 +151,9 @@
       .brand-mark { flex-basis: 60px; width: 60px; height: 60px; border-radius: 14px; }
       .hero-copy { margin-top: 23px; }
       .filters { grid-template-columns: 1fr; gap: 13px; }
+      .suggest-grid { grid-template-columns: 1fr; }
+      .suggest-wide { grid-column: auto; }
+      .suggest-panel { border-radius: 18px; }
       .search-panel { border-radius: 18px; }
       .cards { grid-template-columns: 1fr; gap: 11px; }
       .provider-card { padding: 17px; }
@@ -195,6 +217,46 @@
         <div class="status"><strong>Carregando prestadores...</strong>Isso pode levar alguns segundos.</div>
       </div>
     </section>
+
+    <section class="suggest-panel" aria-labelledby="suggestTitle">
+      <h2 class="panel-heading" id="suggestTitle">Sugira um profissional</h2>
+      <p class="suggest-intro">Conhece um profissional que pode ajudar os moradores? Envie os dados para avaliação do administrador.</p>
+      <form id="suggestForm">
+        <div class="suggest-grid">
+          <div class="suggest-field">
+            <label for="sugNome">Nome do profissional *</label>
+            <input id="sugNome" name="Nome do profissional" maxlength="120" required placeholder="Nome completo ou nome comercial">
+          </div>
+          <div class="suggest-field">
+            <label for="sugTelefone">Telefone / WhatsApp *</label>
+            <input id="sugTelefone" name="Telefone / WhatsApp" type="tel" maxlength="40" required placeholder="(82) 99999-9999">
+          </div>
+          <div class="suggest-field suggest-wide">
+            <label for="sugCategoria">Tipo de serviço / categoria *</label>
+            <input id="sugCategoria" name="Categoria" maxlength="100" required placeholder="Ex.: eletricista, diarista, encanador">
+          </div>
+          <div class="suggest-field">
+            <label for="sugIndicador">Seu nome *</label>
+            <input id="sugIndicador" name="Nome de quem sugere" maxlength="120" required autocomplete="name" placeholder="Seu nome completo">
+          </div>
+          <div class="suggest-field">
+            <label for="sugQuadra">Sua quadra *</label>
+            <input id="sugQuadra" name="Quadra de quem sugere" maxlength="40" required placeholder="Ex.: Quadra A">
+          </div>
+          <div class="suggest-field">
+            <label for="sugLote">Seu lote *</label>
+            <input id="sugLote" name="Lote de quem sugere" maxlength="40" required placeholder="Ex.: Lote 12">
+          </div>
+          <div class="honeypot" aria-hidden="true">
+            <label for="sugWebsite">Não preencha este campo</label>
+            <input id="sugWebsite" name="_honey" tabindex="-1" autocomplete="off">
+          </div>
+        </div>
+        <button class="suggest-submit" id="suggestSubmit" type="submit">Enviar sugestão</button>
+        <div id="suggestMessage" class="suggest-message" role="status" aria-live="polite"></div>
+        <p class="suggest-note">As sugestões são analisadas pelo administrador. O envio não adiciona automaticamente o profissional à lista pública.</p>
+      </form>
+    </section>
   </main>
 
   <footer>Consulta de prestadores • Condomínio Ouro Verde</footer>
@@ -205,6 +267,40 @@
     const SHEET_ID = '1efhoUCG9F7p71Szmq_sQ3w3KUruZornX0OZWXbgGK1s';
     const ABA_DADOS = 'Dados';
     const DDD_PADRAO = '82';
+
+    // Formulário de sugestões: encaminha por serviço externo de e-mail; não altera a planilha.
+    const suggestForm = document.getElementById('suggestForm');
+    const suggestSubmit = document.getElementById('suggestSubmit');
+    const suggestMessage = document.getElementById('suggestMessage');
+    suggestForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (document.getElementById('sugWebsite').value) return;
+      suggestMessage.className = 'suggest-message';
+      suggestMessage.textContent = '';
+      suggestSubmit.disabled = true;
+      suggestSubmit.textContent = 'Enviando...';
+      const payload = Object.fromEntries(new FormData(suggestForm).entries());
+      payload._subject = 'Nova sugestão de profissional — Consulta Ouro Verde';
+      payload._template = 'table';
+      try {
+        const response = await fetch('https://formsubmit.co/ajax/torongo@gmail.com', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const result = await response.json();
+        if (!response.ok || result.success === false) throw new Error('Envio não confirmado');
+        suggestMessage.textContent = 'Sugestão enviada! Obrigado por contribuir. O administrador avaliará as informações antes de incluir o profissional na lista.';
+        suggestMessage.className = 'suggest-message success show';
+        suggestForm.reset();
+      } catch (error) {
+        suggestMessage.textContent = 'Não foi possível confirmar o envio. Tente novamente em instantes. Se o serviço ainda não estiver ativado, o administrador precisará confirmar a ativação enviada por e-mail pelo FormSubmit.';
+        suggestMessage.className = 'suggest-message error show';
+      } finally {
+        suggestSubmit.disabled = false;
+        suggestSubmit.textContent = 'Enviar sugestão';
+      }
+    });
 
     let todosOsDados = [];
 
