@@ -140,9 +140,15 @@
     .suggest-submit:disabled { opacity:.65; cursor:wait; }
     .suggest-message { display:none; margin-top:14px; padding:12px 14px; border-radius:12px; font-size:.92rem; }
     .suggest-message.show { display:block; }
-    .suggest-message.success { background:#e9f6ed; color:#175c32; }
-    .suggest-message.error { background:#fff0ed; color:#8a2618; }
+    .suggest-message.error { display:block; background:#fff0ed; color:#8a2618; }
     .suggest-note { margin:12px 0 0; color:var(--muted); font-size:.82rem; }
+    .confirmation-dialog { width:min( calc(100% - 32px), 440px); border:0; border-radius:20px; padding:0; color:var(--ink); box-shadow:0 24px 80px rgba(0,0,0,.28); }
+    .confirmation-dialog::backdrop { background:rgba(12,28,19,.58); }
+    .confirmation-content { padding:28px; text-align:center; }
+    .confirmation-content h2 { margin:0 0 12px; font-size:1.25rem; color:var(--green-950); }
+    .confirmation-content p { margin:0; line-height:1.55; color:var(--ink); }
+    .confirmation-button { margin-top:22px; min-height:46px; min-width:120px; border:0; border-radius:12px; padding:11px 22px; background:var(--green-800); color:#fff; font-weight:750; cursor:pointer; }
+    .confirmation-button:hover { background:var(--green-700); }
     .honeypot { position:absolute !important; left:-5000px !important; width:1px !important; height:1px !important; overflow:hidden !important; }
 
     footer { padding: 30px 0 24px; color: var(--muted); text-align: center; font-size: .82rem; }
@@ -269,6 +275,14 @@
 
   <footer>Consulta de prestadores • Condomínio Ouro Verde</footer>
 
+  <dialog class="confirmation-dialog" id="suggestConfirmation" aria-labelledby="confirmationTitle" aria-describedby="confirmationText">
+    <div class="confirmation-content">
+      <h2 id="confirmationTitle">Sugestão enviada!</h2>
+      <p id="confirmationText">Obrigado por contribuir. O administrador avaliará as informações antes de incluir o profissional na lista.</p>
+      <button class="confirmation-button" id="confirmationButton" type="button">Confirmar</button>
+    </div>
+  </dialog>
+
   <script>
     // A planilha continua sendo a fonte de dados. Não coloque informações privadas nela.
     const API_KEY = 'AIzaSyD2hnM-kjiN5JhmNeZ5ruso4RhM1qUA0JI';
@@ -281,6 +295,8 @@
     const suggestForm = document.getElementById('suggestForm');
     const suggestSubmit = document.getElementById('suggestSubmit');
     const suggestMessage = document.getElementById('suggestMessage');
+    const suggestConfirmation = document.getElementById('suggestConfirmation');
+    const confirmationButton = document.getElementById('confirmationButton');
 
     suggestForm.addEventListener('submit', async (event) => {
       event.preventDefault();
@@ -311,8 +327,9 @@
           body: payload
         });
 
-        suggestMessage.textContent = 'Sugestão enviada! Obrigado por contribuir. O administrador avaliará as informações antes de incluir o profissional na lista.';
-        suggestMessage.className = 'suggest-message success show';
+        suggestMessage.textContent = '';
+        suggestMessage.className = 'suggest-message';
+        suggestConfirmation.showModal();
       } catch (error) {
         console.error('Falha ao encaminhar sugestão:', error);
         suggestMessage.textContent = 'Não foi possível encaminhar a solicitação. Confira sua conexão e tente novamente.';
@@ -321,6 +338,14 @@
         suggestSubmit.disabled = false;
         suggestSubmit.textContent = 'Enviar sugestão';
       }
+    });
+
+    confirmationButton.addEventListener('click', () => {
+      suggestConfirmation.close();
+      suggestForm.reset();
+      suggestMessage.textContent = '';
+      suggestMessage.className = 'suggest-message';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     });
 
     let todosOsDados = [];
