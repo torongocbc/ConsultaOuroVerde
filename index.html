@@ -51,6 +51,11 @@
     .hero-copy { margin: 27px 0 0; max-width: 620px; }
     .hero-copy h2 { margin: 0 0 7px; font-size: clamp(1.5rem, 4vw, 2.15rem); letter-spacing: -.035em; }
     .hero-copy p { margin: 0; color: #d8e9de; }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+    .hero-suggest-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 46px; padding: 11px 17px; border: 0; border-radius: 12px; background: #f2c94c; color: #183d2f; font-weight: 800; text-decoration: none; box-shadow: 0 3px 10px rgba(0,0,0,.12); transition: transform .18s ease, background .18s ease; }
+    .hero-suggest-btn:hover { background: #ffda67; transform: translateY(-1px); }
+    .hero-suggest-btn:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+    #suggestTitle { scroll-margin-top: 20px; }
     main { margin-top: -45px; }
     .search-panel {
       background: var(--surface); border: 1px solid var(--line); border-radius: 22px;
@@ -180,6 +185,9 @@
       <div class="hero-copy">
         <h2>Encontre o profissional que você precisa.</h2>
         <p>Pesquise por nome ou serviço e entre em contato diretamente pelo WhatsApp.</p>
+        <div class="hero-actions">
+          <a class="hero-suggest-btn" href="#suggestTitle" aria-label="Ir para o formulário de sugestão de profissional">＋ Sugerir um profissional <span aria-hidden="true">↓</span></a>
+        </div>
       </div>
     </div>
   </header>
